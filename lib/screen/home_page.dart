@@ -2,18 +2,23 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_iconly/flutter_iconly.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:weather_app_open_weather/config.dart';
 import 'package:weather_app_open_weather/model/weather_model.dart';
+import 'package:weather_app_open_weather/theme/theme_provider.dart';
+import 'package:weather_app_open_weather/widgets/sunrise_sunset_widget.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   WeatherModel? weatherData;
   TextEditingController searchCtrl = TextEditingController();
   bool isLoading = false;
@@ -120,66 +125,311 @@ class _HomePageState extends State<HomePage> {
   //   });
   // }
 
+  String formattedDate = DateFormat('EEE, MMM d, ' 'yy').format(DateTime.now());
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themePro = ref.watch(themeProvider);
     return Scaffold(
-        body: Padding(
-      padding: const EdgeInsets.all(30.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextField(
-            controller: searchCtrl,
-            decoration: InputDecoration(
-              hintText: "Search here...",
-              suffixIcon: IconButton(
-                onPressed: () async {
-                  if (searchCtrl.text.isNotEmpty) {
-                    setState(() {
-                      isLoading = true;
-                    });
-                    // await Future.delayed(const Duration(seconds: 1));
-                    WeatherModel? data = await getWeather(searchCtrl.text);
-                    setState(() {
-                      weatherData = data;
-                      isLoading = false;
-                    });
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text("Please Enter Something")));
-                  }
-                },
-                icon: const Icon(Icons.search),
-              ),
+        resizeToAvoidBottomInset: false,
+        backgroundColor: theme.colorScheme.primary,
+        appBar: AppBar(
+          backgroundColor: theme.colorScheme.primary,
+          title: const Text("Weather"),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              onPressed: () {
+                themePro.toggleTheme();
+              },
+              icon: themePro.isDarkMode
+                  ? const Icon(
+                      Icons.light_mode,
+                    )
+                  : const Icon(
+                      Icons.dark_mode,
+                    ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Center(
-              child: isLoading
-                  ? const CircularProgressIndicator()
-                  : weatherData != null
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(weatherData!.name),
-                            Text(weatherData!.main.tempInCelsius
-                                .toStringAsFixed(2)),
-                            Text(weatherData!.visibility.toString()),
-                            Column(
-                              children: weatherData!.weather
-                                  .map((e) => Column(
-                                        children: [
-                                          Text(e.description),
-                                          Text(e.icon)
-                                        ],
-                                      ))
-                                  .toList(),
-                            )
-                          ],
+          ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 10),
+          child: ListView(
+            children: [
+              Container(
+                // padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondary,
+                    borderRadius: BorderRadius.circular(30)),
+                child: TextField(
+                  controller: searchCtrl,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.all(10),
+                    border: InputBorder.none,
+                    hintText: "Search for city...",
+                    prefixIcon: IconButton(
+                      onPressed: () async {
+                        if (searchCtrl.text.isNotEmpty) {
+                          setState(() {
+                            isLoading = true;
+                          });
+                          // await Future.delayed(const Duration(seconds: 1));
+                          WeatherModel? data =
+                              await getWeather(searchCtrl.text);
+                          setState(() {
+                            weatherData = data;
+                            isLoading = false;
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text("Please Enter Something")));
+                        }
+                      },
+                      icon: const Icon(IconlyLight.search),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                  child: isLoading
+                      ? const Center(
+                          child: Text("Loading data..."),
                         )
-                      : const Text("No Data")),
-        ],
-      ),
-    ));
+                      : weatherData != null
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(30),
+                                  width: double.maxFinite,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.secondary,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${weatherData!.name},',
+                                            style: const TextStyle(
+                                                fontSize: 30,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                          Container(
+                                            decoration: BoxDecoration(
+                                                color:
+                                                    theme.colorScheme.primary,
+                                                borderRadius:
+                                                    BorderRadius.circular(20)),
+                                            padding: const EdgeInsets.all(10),
+                                            child: Text(
+                                              formattedDate,
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                      Text(
+                                        weatherData!.sys.country,
+                                        style: const TextStyle(
+                                          fontSize: 30,
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${weatherData!.main.tempInCelsius.toStringAsFixed(0)}°',
+                                            style: const TextStyle(
+                                                fontSize: 60,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                          Column(
+                                            children: weatherData!.weather
+                                                .map(
+                                                  (e) => Column(
+                                                    children: [
+                                                      e.main == 'Rain'
+                                                          ? Image.asset(
+                                                              'assets/images/rain.png',
+                                                              height: 100,
+                                                            )
+                                                          : e.main == 'Clouds'
+                                                              ? Image.asset(
+                                                                  'assets/images/clouds.png',
+                                                                  height: 60,
+                                                                )
+                                                              : e.main ==
+                                                                      'Sunny'
+                                                                  ? Image.asset(
+                                                                      'assets/images/sunny.png',
+                                                                      height:
+                                                                          60,
+                                                                    )
+                                                                  : const SizedBox
+                                                                      .shrink()
+                                                    ],
+                                                  ),
+                                                )
+                                                .toList(),
+                                          ),
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                const Text(
+                                  "Sunrise & Sunset",
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                                const SizedBox(height: 10),
+                                SunriseSunsetWidget(
+                                    theme: theme,
+                                    weatherData: weatherData,
+                                    title: 'Sunrise',
+                                    time: weatherData!.sys.sunriseFormatted,
+                                    timeUntil: weatherData!
+                                        .sys.formattedTimeUntilSunrise),
+                                const SizedBox(height: 15),
+                                SunriseSunsetWidget(
+                                  theme: theme,
+                                  weatherData: weatherData,
+                                  title: 'Sunset',
+                                  time: weatherData!.sys.sunsetFormatted,
+                                  timeUntil:
+                                      weatherData!.sys.formattedTimeUntilSunset,
+                                ),
+                                const SizedBox(height: 20),
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                      color: theme.colorScheme.secondary,
+                                      borderRadius: BorderRadius.circular(10)),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              Image.asset(
+                                                  'assets/images/min.png',
+                                                  height: 20),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                '${weatherData!.main.tempMinInCelsius.toStringAsFixed(0)}°',
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16),
+                                              ),
+                                              const Text("Min. Temp"),
+                                            ],
+                                          ),
+                                          Column(
+                                            children: [
+                                              Image.asset(
+                                                  'assets/images/feelslike.png',
+                                                  height: 20),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                '${weatherData!.main.feelsLikeInCelsius.toStringAsFixed(0)}°',
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16),
+                                              ),
+                                              const Text("Feels Like"),
+                                            ],
+                                          ),
+                                          Column(
+                                            children: [
+                                              Image.asset(
+                                                  'assets/images/max.png',
+                                                  height: 20),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                '${weatherData!.main.tempMaxInCelsius.toStringAsFixed(0)}°',
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16),
+                                              ),
+                                              const Text("Max. Temp"),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              Image.asset(
+                                                  'assets/images/humidity.png',
+                                                  height: 20),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                '${weatherData!.main.tempMinInCelsius.toStringAsFixed(0)}°',
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16),
+                                              ),
+                                              const Text("Humidity"),
+                                            ],
+                                          ),
+                                          Column(
+                                            children: [
+                                              Image.asset(
+                                                  'assets/images/wind.png',
+                                                  height: 20),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                '${weatherData!.main.feelsLikeInCelsius.toStringAsFixed(0)}°',
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16),
+                                              ),
+                                              const Text("Wind"),
+                                            ],
+                                          ),
+                                          Column(
+                                            children: [
+                                              Image.asset(
+                                                  'assets/images/visibility.png',
+                                                  height: 20),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                '${weatherData!.main.tempMaxInCelsius.toStringAsFixed(0)}°',
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16),
+                                              ),
+                                              const Text("Visibility"),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            )
+                          : const Text("No Data")),
+            ],
+          ),
+        ));
   }
 }
