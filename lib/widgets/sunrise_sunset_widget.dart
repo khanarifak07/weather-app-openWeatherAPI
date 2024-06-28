@@ -5,7 +5,11 @@ class SunriseSunsetWidget extends StatelessWidget {
   const SunriseSunsetWidget({
     super.key,
     required this.theme,
-    required this.weatherData, required this.title, required this.timeUntil, required this.time,
+    required this.weatherData,
+    required this.title,
+    required this.timeUntil,
+    required this.time,
+    required this.image,
   });
 
   final ThemeData theme;
@@ -13,6 +17,7 @@ class SunriseSunsetWidget extends StatelessWidget {
   final String timeUntil;
   final String time;
   final WeatherModel? weatherData;
+  final String image;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +29,7 @@ class SunriseSunsetWidget extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          Image.asset('assets/images/sunrise.png', height: 50),
+          Image.asset(image, height: 50),
           const SizedBox(width: 20),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

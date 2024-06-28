@@ -45,7 +45,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
       //
       if (permission == LocationPermission.deniedForever) {
-        throw Exception('Location permissions are permanently denied');
+        await Geolocator.openAppSettings();
+        if (permission == LocationPermission.denied) {
+          throw Exception("Location permission is denied");
+        }
       }
 
       //get the current position
@@ -195,8 +198,16 @@ class _HomePageState extends ConsumerState<HomePage> {
               const SizedBox(height: 20),
               Center(
                   child: isLoading
-                      ? const Center(
-                          child: Text("Loading data..."),
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset("assets/images/clouds.png",
+                                height: 250),
+                            const Text(
+                              "Loading weather...",
+                              style: TextStyle(fontSize: 25),
+                            ),
+                          ],
                         )
                       : weatherData != null
                           ? Column(
@@ -296,12 +307,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 ),
                                 const SizedBox(height: 10),
                                 SunriseSunsetWidget(
-                                    theme: theme,
-                                    weatherData: weatherData,
-                                    title: 'Sunrise',
-                                    time: weatherData!.sys.sunriseFormatted,
-                                    timeUntil: weatherData!
-                                        .sys.formattedTimeUntilSunrise),
+                                  theme: theme,
+                                  weatherData: weatherData,
+                                  title: 'Sunrise',
+                                  time: weatherData!.sys.sunriseFormatted,
+                                  timeUntil: weatherData!
+                                      .sys.formattedTimeUntilSunrise,
+                                  image: 'assets/images/sunrise.png',
+                                ),
                                 const SizedBox(height: 15),
                                 SunriseSunsetWidget(
                                   theme: theme,
@@ -310,6 +323,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   time: weatherData!.sys.sunsetFormatted,
                                   timeUntil:
                                       weatherData!.sys.formattedTimeUntilSunset,
+                                  image: 'assets/images/sunset.png',
                                 ),
                                 const SizedBox(height: 20),
                                 Container(

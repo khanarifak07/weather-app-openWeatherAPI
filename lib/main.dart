@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:weather_app_open_weather/screen/home_page.dart';
+import 'package:weather_app_open_weather/screen/splash/splash_screen.dart';
 import 'package:weather_app_open_weather/theme/theme_provider.dart';
 
 void main() async {
@@ -17,8 +17,9 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themePro = ref.watch(themeProvider);
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: themePro.themeData,
-      home: const HomePage(),
+      home: const SplashScreen(),
     );
   }
 }
